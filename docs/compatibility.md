@@ -61,6 +61,7 @@ behaviour; it is not a claim about every path in the game.
 | Item | State |
 |---|---|
 | Controllers | Keyboard and up to two SDL2 GameControllers |
+| ROM selection | First-run native folder picker; encrypted-set auto-decrypt; `--select-rom` / `--rom-path` overrides |
 | Coin / start / service / test | Verified through the BIOS |
 | RTC | uPD4990A serial calendar model |
 | System latch | Vector swap, fix/Z80 ROM select, backup RAM lock, palette bank |

@@ -26,12 +26,13 @@ identify (measured below).
 
 ## Status
 
-**v0.1.0, alpha - boots, runs attract mode and plays a full match on
+**v0.1.1, alpha - boots, runs attract mode and plays a full match on
 recompiled code.**
 
 | Area | State |
 |---|---|
 | Boot | Real MVS BIOS (`sp-s2.sp1`) -> eye-catcher -> intro -> title -> HOW TO PLAY / T.O.P. SYSTEM -> PLAYER SELECT -> stage |
+| ROM selector | First run with no discoverable ROMs opens a native folder picker; choosing the encrypted set auto-decrypts to the per-user cache; `--select-rom` forces it, `--rom-path` bypasses it |
 | Input / credits | Coin, Start, directions, A/B/C/D tested through the BIOS and menus |
 | Gameplay | Player select (Rock), CPU opponent (Hotaru), stage, movement, attacks, win/loss sequence over a 19,000-frame scripted session |
 | Graphics | Sprites, backgrounds, palettes, fix layer with the Garou 512 KB bank table, raster effects |
@@ -165,10 +166,28 @@ build-windows/Release/Garou.exe --rom-path build-windows/roms
 build-linux/Garou --rom-path build-linux/roms
 ```
 
+If you start the player without `--rom-path` and no ROM folder is found in
+the usual places (`roms` beside the executable, `GAROU_ROM_DIR`, the
+per-user cache), it opens a native folder picker:
+
+* **Windows:** the standard folder dialog.
+* **Linux:** `zenity`, `kdialog` or `yad`; if none is available it asks on
+  the terminal. In a Steam Deck Gaming Mode session without a dialog helper,
+  put a `roms` folder next to the AppImage or set `GAROU_ROM_DIR` in the
+  launch options.
+
+Point the picker at either the decrypted set (the folder containing
+`253-pd.bin`) or the original encrypted MAME set (the folder containing
+`253-ep1.p1`). In the encrypted case the bundled `garou_decrypt` helper runs
+once and writes a decrypted copy to `%LOCALAPPDATA%\Garou\roms` on Windows or
+`~/.local/share/garou/roms` on Linux; later launches reuse it. Use
+`--select-rom` to force the picker even when a `roms` folder exists, and
+`--rom-path DIR` to bypass it entirely. `--headless` never opens a dialog.
+
 Useful flags: `--headless`, `--frames N`, `--input FILE`,
 `--screenshot N:FILE`, `--wav FILE`, `--interp`, `--verify`,
-`--dump-misses FILE`, `--scale N`, `--fullscreen`, `--mute`. Run `--help` for
-the list.
+`--dump-misses FILE`, `--scale N`, `--fullscreen`, `--mute`,
+`--select-rom`. Run `--help` for the runtime list.
 
 ## Controls
 
@@ -293,6 +312,7 @@ as unverified.
 CMakeLists.txt              build: decrypt -> recompile -> player
 src/game.c, game.h          verified ng_game_t: ROM layout, bank map, SMA ports
 src/main.c                  player (ng_main)
+src/rom_select.c/.h         first-run folder picker and encrypted-set decrypt
 src/recomp_main.c           generator (ng_recomp_main)
 tools/decrypt.c             NEO-SMA/NEO-CMC42 decryption, S-ROM extraction
 tools/prot_cmc.cpp          MAME CMC tables (BSD-3, reference)

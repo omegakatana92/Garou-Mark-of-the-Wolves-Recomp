@@ -188,3 +188,27 @@ and Back-as-coin, and hot-unplug. No physical pad was needed.
 
 The other supported games in the toolkit tree use their own toolkit copies,
 so these generic changes do not alter their binaries.
+
+## 12. ROM selector
+
+The first-run folder picker was exercised on Windows and Linux:
+
+* Windows, empty directory, `--select-rom`: the native `IFileOpenDialog`
+  folder picker opened (the process stayed in `Show()` until it was killed).
+* Windows, `GAROU_ROM_DIR` pointing at the encrypted `roms-src`: the player
+  ran `garou_decrypt.exe` into `%LOCALAPPDATA%\Garou\roms`, then booted and
+  ran 300 windowed frames.
+* Windows, `roms/` beside the executable, no `--rom-path`: the default was
+  found, no dialog appeared, and 300 windowed frames ran.
+* Linux, `roms/` beside the executable, no `--rom-path`: no dialog, 300
+  windowed frames ran under WSLg.
+* Linux, empty directory: WSL did not have zenity/kdialog/yad, so the
+  terminal fallback prompted for a folder. A pseudo-TTY fed the decrypted
+  path and the game ran one frame from it.
+* The native Linux zenity/kdialog dialog itself was not available in the
+  WSL image; it is the first branch of `pick_dir()` and is used on desktop
+  Linux/SteamOS when present.
+
+These checks cover path discovery, argument injection, encrypted-set
+detection, the bundled decrypt call, the Windows native picker and the Linux
+terminal fallback. A physical Steam Deck dialog was not tested.

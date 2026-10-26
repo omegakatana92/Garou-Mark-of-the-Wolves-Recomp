@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(garou VERSION 0.1.0 LANGUAGES C CXX)
+project(garou VERSION 0.1.1 LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -30,7 +30,7 @@ target_link_libraries(garou_recomp PRIVATE m68krecomp_core)
 target_include_directories(garou_recomp PRIVATE src)
 
 # Stage 2: the player, with the generated C when ROMs are available.
-set(GAME_SOURCES src/main.c)
+set(GAME_SOURCES src/main.c src/rom_select.c)
 set(GEN_DIR ${CMAKE_BINARY_DIR}/generated)
 set(GEN_FILES 16)
 if(GAROU_ROM_DIR)
@@ -72,6 +72,10 @@ add_executable(garou ${GAME_SOURCES} src/game.c)
 set_target_properties(garou PROPERTIES OUTPUT_NAME "Garou")
 target_link_libraries(garou PRIVATE neogeorecomp)
 target_include_directories(garou PRIVATE src ${GEN_DIR})
+if(WIN32)
+    # Native folder picker in rom_select.c (IFileOpenDialog).
+    target_link_libraries(garou PRIVATE ole32 shell32)
+endif()
 if(GAROU_ROM_DIR)
     add_custom_target(profile
         COMMAND garou --headless --rom-path ${DEC_DIR} --frames 6000 --dump-misses ${GAROU_ENTRIES}

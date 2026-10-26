@@ -23,6 +23,15 @@ Quick start
 
 2. Run the AppImage.  It starts in fullscreen with a 4:3 pillarboxed image.
 
+If no ROM folder is found, the player opens a folder picker (zenity,
+kdialog or yad; a terminal prompt is the fallback).  Select either the
+decrypted folder (contains 253-pd.bin) or the original encrypted set
+(contains 253-ep1.p1); the bundled garou_decrypt prepares a cached copy in
+~/.local/share/garou/roms.  Use --select-rom to force the picker, or
+--rom-path to bypass it.  --headless never opens a dialog.  In Gaming Mode
+without a dialog helper, put the roms folder next to the AppImage or set
+GAROU_ROM_DIR in the launch options.
+
 Steam Deck
 ----------
 Copy the AppImage and a roms folder to the Deck, mark the AppImage executable

@@ -33,6 +33,13 @@ Quick start
 
    The BIOS is the real sp-s2.sp1 MVS system ROM. There is no BIOS HLE.
 
+   If you run Garou.exe without --rom-path and no roms folder is found, it
+   opens a folder picker. Select either the decrypted folder (contains
+   253-pd.bin) or the original encrypted set (contains 253-ep1.p1). In the
+   encrypted case the bundled garou_decrypt.exe prepares a decrypted copy
+   under %LOCALAPPDATA%\Garou\roms and later runs reuse it. Use --select-rom
+   to force the picker; --headless never opens it.
+
 Controls
 --------
   Arrow keys              move
@@ -64,6 +71,7 @@ Options
   --dump-misses FILE      write interpreted entry points
   --scale N               window scale (default 3)
   --fullscreen            fullscreen, 4:3 pillarboxed
+  --select-rom            force the ROM folder picker
   --mute                  no sound from the window
 
 Status and limitations
