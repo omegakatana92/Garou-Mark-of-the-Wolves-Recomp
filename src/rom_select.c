@@ -238,6 +238,11 @@ static int try_candidate(const char *dir, char *out, size_t n) {
     }
     if (has_encrypted(dir)) {
         char cache[PATH_MAX];
+        if (get_cache_dir(cache, sizeof(cache)) != 0) return -1;
+        if (has_decrypted(cache)) {
+            snprintf(out, n, "%s", cache);
+            return 1;
+        }
         if (decrypt_into(dir, cache, sizeof(cache)) != 0) return -1;
         snprintf(out, n, "%s", cache);
         return 1;
@@ -401,6 +406,8 @@ static int pick_dir(const char *start, char *out, size_t n) {
             if (out[0]) return 0;
         }
     }
+    fprintf(stderr, "error: no folder picker is available; put roms/ beside "
+                    "the AppImage, set GAROU_ROM_DIR, or pass --rom-path DIR\n");
     return -1;
 }
 
