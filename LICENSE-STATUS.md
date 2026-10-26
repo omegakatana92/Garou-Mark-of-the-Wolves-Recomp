@@ -1,11 +1,13 @@
 # License status
 
-**Status: confirmed for this repository (2026-10-26).**
+**Status: PolyForm Noncommercial 1.0.0, as requested for this repository
+(2026-10-26).**
 
 The original project code in this repository (the game host, the ROM
 decryption tool, the packaging scripts and the documentation) is licensed
 under the **PolyForm Noncommercial License 1.0.0** (see `LICENSE`). The
-repository owner selected the Noncommercial variant for this project.
+repository owner requested PolyForm; this repository uses the Noncommercial
+1.0.0 variant specified in the project brief.
 
 Required Notice: Copyright (c) 2026 the Garou Recompilation authors.
 
