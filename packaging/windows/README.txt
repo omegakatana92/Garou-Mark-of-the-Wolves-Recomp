@@ -78,7 +78,7 @@ Status and limitations
 
 Licensing
 ---------
-  The project code is proposed under PolyForm Noncommercial 1.0.0; see
+  The project code is licensed under PolyForm Noncommercial 1.0.0; see
   LICENSES\LICENSE-STATUS.txt and LICENSES\LICENSE.txt. The bundled
   neogeorecomp toolkit remains MIT; Musashi/z80 are MIT; ymfm and the MAME
   decryption material are BSD-3-Clause; SDL2 is zlib. See

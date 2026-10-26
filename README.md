@@ -41,7 +41,7 @@ recompiled code.**
 | Toolkit tests | 68000 conformance 59/60 (reference 59/60); SDL virtual-gamepad test passes on Windows (P1/P2, D-pad/stick, A/B/C/D, Start, Back-as-coin, hot-unplug) |
 | Windows | Release exe built with MSVC 19.51 (VS 18 2026) x64 + SDL2 2.32.10; headless and windowed launches tested |
 | Steam Deck | AppImage built and launched headless/fullscreen under WSL2 Ubuntu 22.04; Linux build reports 100.00% native over the 19,000-frame session and 0 `--verify` mismatches; **not tested on physical Deck hardware** |
-| License | PolyForm Noncommercial 1.0.0 proposed; final variant confirmed for this repository |
+| License | PolyForm Noncommercial 1.0.0 (repository license; see `LICENSE-STATUS.md`) |
 
 
 ### The supplied set is the original encrypted release
@@ -282,8 +282,8 @@ as unverified.
 * **Audio not auditioned.** Signal presence and level are measured; music and
   effect quality are not subjectively verified.
 * **No memory card support** (the toolkit does not implement it).
-* **No commercial use.** PolyForm Noncommercial 1.0.0 is proposed; the final
-  variant is pending owner confirmation.
+* **No commercial use.** The project is licensed under PolyForm Noncommercial
+  1.0.0; do not assume commercial redistribution is permitted.
 * **No ROMs or BIOS included.** You must supply your own legally obtained
   dumps.
 
@@ -315,8 +315,8 @@ neogeorecomp/               toolkit copy (MIT), with generic SMA/RNG/fix fixes
 ## License
 
 Original code in `src/`, `tools/decrypt.c`, `packaging/` and the documentation
-is proposed under **PolyForm Noncommercial 1.0.0** (see `LICENSE` and
-`LICENSE-STATUS.md`); final confirmation is pending.
+is licensed under **PolyForm Noncommercial 1.0.0** (see `LICENSE` and
+`LICENSE-STATUS.md`).
 
 `neogeorecomp/` remains MIT (sp00nznet); Musashi and superzazu/z80 are MIT;
 ymfm is BSD-3-Clause; the decryption tables and permutations are BSD-3-Clause
