@@ -1,0 +1,4 @@
+# Garou: insert a credit and press 1P Start.
+# Frame numbers count 59.19 Hz video frames from power-on.
+900 coin
+1000 start

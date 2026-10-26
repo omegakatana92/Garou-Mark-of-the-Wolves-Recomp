@@ -1,0 +1,45 @@
+# Garou: Mark of the Wolves - coin, start, select Rock, then play.
+# The BIOS handles coin/start; the game auto-advances the 5-count character
+# and T.O.P. screens, so one A press on the character-select screen is enough.
+900 coin
+1000 start
+4200 a
+
+# Match: walk in, attack, retreat, crouch, repeat.  The opponent is CPU.
+6500-7600 right
+7000 a
+7200 b
+7400 c
+7600 d
+8000-8600 left
+8200 a
+8800-9400 down
+9000 b
+9600-10400 right
+9800 a
+10000 b
+10400-10800 a+b
+11200-12000 left
+11400 c
+11600 d
+12200-13000 right
+12400 a
+12600 b
+12800 c
+13200 a
+13400 b
+13600 c
+13800 d
+14200-15000 right
+14400 a
+14600 b
+15200-15800 left
+15400 c
+16000 a
+16200 b
+16400 c
+16600 d
+17000-17600 right
+17200 a
+17400 b
+17800 start

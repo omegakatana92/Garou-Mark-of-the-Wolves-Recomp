@@ -1,0 +1,28 @@
+# Build outputs
+build/
+build-windows/
+build-linux/
+build-interp/
+dist/
+generated/
+entries.txt
+
+# User-supplied ROMs and anything derived from them
+roms/
+roms-src/
+*.zip
+
+# Local test artifacts
+shots/
+*.wav
+*.mp4
+*.png
+!packaging/appimage/garou.png
+!docs/screenshots/*.png
+
+# Editor/OS noise
+.vs/
+.vscode/
+*.user
+Thumbs.db
+.DS_Store

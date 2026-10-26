@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Garou: Mark of the Wolves
+Comment=Native static recompilation of Garou: Mark of the Wolves (Neo Geo)
+Exec=Garou
+Icon=garou
+Categories=Game;ArcadeGame;
+Terminal=false
