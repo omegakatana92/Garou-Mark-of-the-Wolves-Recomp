@@ -53,11 +53,16 @@ cat > "$APPDIR/AppRun" <<'EOF'
 HERE=$(dirname "$(readlink -f "$0")")
 export LD_LIBRARY_PATH="$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
-# Explicit --rom-path always wins.
+# Explicit --rom-path always wins.  --select-rom asks for the picker, so do
+# not pre-empt it with an automatically found folder.
 has_rom=0
-for a in "$@"; do [ "$a" = "--rom-path" ] && has_rom=1; done
+select_rom=0
+for a in "$@"; do
+    [ "$a" = "--rom-path" ] && has_rom=1
+    [ "$a" = "--select-rom" ] && select_rom=1
+done
 
-if [ "$has_rom" = 0 ]; then
+if [ "$has_rom" = 0 ] && [ "$select_rom" = 0 ]; then
     cand=""
     if [ -n "${GAROU_ROM_DIR:-}" ]; then
         cand="$GAROU_ROM_DIR"
