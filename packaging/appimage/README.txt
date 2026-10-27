@@ -58,6 +58,7 @@ Notes
 * The game's 68000 code is statically recompiled.  Code reached through a
   swapped bank window uses the bundled Musashi interpreter; the measured
   share is reported in the project README.
-* Audio is produced by the real Z80 driver and the YM2610 model.  Signal
-  level is verified; subjective mix quality was not auditioned during the
-  build.
+* Audio is produced by the real Z80 driver and the YM2610 model.  The M1 bank
+  mapping was corrected in this build; 19,000-frame native and interpreter
+  captures are continuous through character select and the early match.  The
+  subjective mix was not auditioned.

@@ -81,7 +81,8 @@ Status and limitations
   * Native coverage: 100.00% of a 19,000-frame scripted session; 92.38% of a
     6,000-frame no-input attract session (bank-window fallback to Musashi).
   * --verify: 9,658,446 blocks, 0 mismatches over 8,000 gameplay frames.
-  * Audio signal is present; subjective mix quality was not auditioned.
+  * Audio continuity is fixed (M1 bank mapping); subjective mix quality was
+    not auditioned.
   * Physical Steam Deck/gamepad not tested; memory cards are not implemented.
 
 Licensing

@@ -51,10 +51,12 @@ behaviour; it is not a claim about every path in the game.
 |---|---|
 | M1 | 256 KB plain Z80 program, not encrypted on this board |
 | Z80 | Real driver, NMI command latch, reply latch, ROM banking |
+| M1 banking | **Fixed in v0.1.2**: banked windows read 64 KB too high; corrected to MAME's masked file offset |
 | YM2610 | FM, SSG, ADPCM-A/B through ymfm, clocked by the Z80 |
 | Output | SDL2 audio or `--wav` |
-| Verified | 3,000-frame WAV, 2 ch / 55,555 Hz, peak 22238, RMS 2152.5 |
-| Not verified | Subjective mix quality (not auditioned) |
+| Verified | 19,000-frame native and interpreter captures continuous through character select and the early match; MAME 0.242 reference has the same continuity |
+| Regression | `tests/audio_regression.py` passes native and interpreter; fails the old interpreter build at 96-107 s |
+| Not verified | Subjective mix quality (not auditioned); physical Deck audio output |
 
 ## I/O and input
 

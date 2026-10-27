@@ -80,3 +80,9 @@ The M1 is not encrypted on this board. The Z80 driver uses the standard NEO-ZMC
 banking and talks to the YM2610. The 16 MB V region is four 4 MB samples
 concatenated. The runtime produces non-silent stereo output; subjective mix
 quality was not auditioned.
+
+The Z80 bank windows use the high byte of the port address as `IN A,(n)`.
+MAME's audio region has the M1 file at offset `0x10000`, so the file offset is
+the masked bank value alone. The v0.1.2 fix corrected an extra `0x10000`
+base that made every banked read 64 KB too high; this corrupted the music
+sequences and caused the BGM dropouts. See `docs/runtime-changes.md`.

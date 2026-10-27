@@ -212,3 +212,59 @@ The first-run folder picker was exercised on Windows and Linux:
 These checks cover path discovery, argument injection, encrypted-set
 detection, the bundled decrypt call, the Windows native picker and the Linux
 terminal fallback. A physical Steam Deck dialog was not tested.
+
+## 13. Audio repair (v0.1.2)
+
+The reported BGM dropouts were reproduced with the old `audio.c` and with the
+old interpreter-only build. The old M1 mapper read every banked window one
+64 KB block too high: MAME's audio region already has the M1 file at offset
+`0x10000`, so the file offset is the masked bank value alone. The fixed bank
+(driver code) still ran, but music sequences and instrument data were
+corrupted; the driver eventually stalled or left isolated samples.
+
+Recordings (19,000 frames, `tests/play_long.txt`):
+
+| Capture | Long silent runs after boot |
+|---|---|
+| old native | 96-107 s (12 s), 205-212 s (8 s), 249-260 s (12 s) |
+| old interpreter (`build-interp`) | 96-107 s (12 s), 188-205 s (18 s) |
+| fixed native | 105 s (1 s), 258-259 s (2 s) |
+| fixed interpreter | no long run before 186 s; 196-204 s is the continue screen |
+| MAME 0.242 reference | 0-5, 16, 93-94, 105, 225, 298-302 s only |
+
+MAME 0.242 was run with the same unzipped set and a matching Lua input
+script, `-wavwrite`, `-video none -sound none`. The reference RMS is 2850;
+the fixed native capture is 2813. The MAME mixer/timing is not sample-identical,
+but the long dropouts are gone in both.
+
+The fix in `neogeorecomp/src/audio.c`:
+
+```c
+uint32_t reg_mask = size ? (((uint32_t)size - 1u) & 0x3FFFFu) : 0;
+off = (s_bank[w] & reg_mask) + (a & win_mask[w]);
+```
+
+and `audio_sync()` at the start of `audio_take_samples()`.
+
+Commands:
+
+```
+python tests/audio_regression.py --exe build-windows/Release/Garou.exe \
+    --rom-path build-windows/roms
+python tests/audio_regression.py --exe build-windows/Release/Garou.exe \
+    --rom-path build-windows/roms --interp
+```
+
+Both pass on the fixed build. The old `build-interp` binary fails with the
+12-second 96-107 s gap, proving the regression test catches the bug.
+
+`--verify` on the fixed native build: 9,658,521 blocks, **0 mismatches**;
+19,000-frame native coverage remains 100.00% (114 interpreted instructions).
+
+The 196-204 s quiet window in the interpreter run is the game-over/continue
+screen (CONTINUE 9 -> black -> FIGHTING LEVEL -> score -> attract), not a
+BGM stall; screenshots at 190/196/200/204/210 s confirm it. MAME's own capture
+has the same kind of transition silence.
+
+Final repaired audio recording requested by the task:
+`/home/deck/Downloads/garou-audio-after.wav`.

@@ -17,6 +17,7 @@ game supplies its own data through `ng_game_t`.
 | `src/exec.c` | Count native and interpreted instructions; refuse native bank-0 code when the window is at another base | Correctness: the same 68k address can mean different bytes |
 | `src/video.c` | `NG_FIX_BANK_GAROU` / `NG_FIX_BANK_KOF2000` fixed-layer bank tables | Late carts bank the 512 KB S ROM; two layouts exist |
 | `src/neogeo.c`, `src/io.c` | MVS watchdog reset after 1,622,015 68k clocks | Hardware behaviour; late games use it as a protection check |
+| `neogeorecomp/src/audio.c` | Correct M1 bank file offset/mask; sync the Z80 before sample generation | NEO-ZMC banking is generic; every M1-banked game is affected |
 | `src/neogeo.c`, `src/window_sdl.c`, `src/platform.c` | `--fullscreen`, 4:3 pillarboxing | Generic presentation option |
 | `src/neogeo.c`, `src/ng_internal.h` | Board initializer carries the new cart fields | Plumbing |
 | `CMakeLists.txt` (toolkit) | `/O1` for generated giant functions on MSVC | Build-time workaround, no behaviour change |
@@ -46,6 +47,30 @@ NG_FIX_BANK_KOF2000 = 2  (six columns of 2-bit bank codes)
 
 `video.c` implements both. The earlier KOF2000/MSLUG3 projects in this
 toolkit tree keep their own toolkit copies, so their numbering is unaffected.
+
+## Audio bank mapping
+
+The Z80's four switchable windows are selected by reading ports `$08-$0B`;
+the high byte of the port address is the bank number.  MAME loads the M1
+into an audio region of `M1 size + 0x10000` bytes with a second copy at
+`0x10000`, and computes each bank entry as:
+
+```
+0x10000 + ((bank << (11 + window)) & ((region_size - 0x10000 - 1) & 0x3ffff))
+```
+
+The file offset is therefore the masked value alone.  The earlier code added
+another `0x10000` when reading the file, so every banked window fetched data
+64 KB too high.  The fixed bank (driver code) was unaffected, which is why
+the driver ran but its music data was corrupt.  `audio.c` now uses
+`(M1 size - 1) & 0x3ffff` and no extra base, and calls `audio_sync()` before
+generating samples so the sequencer keeps running when the 68000 is not
+polling a sound port.
+
+`tests/audio_regression.py` guards the behaviour: a 11,000-frame session must
+not contain a silent run longer than 3 seconds after boot.  It passes native
+and interpreter on the fixed build and fails the old interpreter build at the
+12-second 96-107 s gap.
 
 ## Verification of the changes
 

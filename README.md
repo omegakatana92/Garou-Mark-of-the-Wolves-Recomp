@@ -26,7 +26,7 @@ identify (measured below).
 
 ## Status
 
-**v0.1.1, alpha - boots, runs attract mode and plays a full match on
+**v0.1.2, alpha - boots, runs attract mode and plays a full match on
 recompiled code.**
 
 | Area | State |
@@ -36,7 +36,7 @@ recompiled code.**
 | Input / credits | Coin, Start, directions, A/B/C/D tested through the BIOS and menus |
 | Gameplay | Player select (Rock), CPU opponent (Hotaru), stage, movement, attacks, win/loss sequence over a 19,000-frame scripted session |
 | Graphics | Sprites, backgrounds, palettes, fix layer with the Garou 512 KB bank table, raster effects |
-| Audio | Z80 driver and YM2610 produce signal (3000-frame WAV: peak 22238, RMS 2152.5 at 55.5 kHz stereo); subjective mix not auditioned |
+| Audio | **Fixed in v0.1.2**: the Z80 M1 bank mapper read every bank 64 KB too high, corrupting the music driver's data. Native and interpreter captures are continuous through character select and the early match; a MAME 0.242 reference recording has the same continuity. Subjective mix not auditioned |
 | Native coverage | **100.00%** of the 19,000-frame scripted session (114 interpreted instructions, 0 uncovered); **92.38%** of a 6,000-frame no-input attract session (bank-window fallback) |
 | `--verify` | 9,658,446 blocks over 8,000 gameplay frames, **0 mismatches**; 4,822,016 blocks over 4,200 coin/start frames, **0 mismatches** |
 | Toolkit tests | 68000 conformance 59/60 (reference 59/60); SDL virtual-gamepad test passes on Windows (P1/P2, D-pad/stick, A/B/C/D, Start, Back-as-coin, hot-unplug) |
@@ -281,13 +281,65 @@ and the BIOS) is recompiled and runs natively.
 
 ## Audio
 
-The Z80 runs the real M1 driver with NMI/reply latches and ROM banking. The
-YM2610's FM, SSG and ADPCM-A/B are synthesized by
+**Root cause (confirmed):** the Z80 M1 bank mapper added a 64 KB base to the
+file offset. MAME loads the M1 into an audio region with a second copy at
+offset `0x10000`; the bank formula already includes that base, so the file
+offset must be the masked bank value alone:
+
+```c
+/* old: wrong - reads one 64 KB block too high */
+off = 0x10000 + (s_bank[w] & ((size - 0x10000 - 1) & 0x3FFFF));
+/* fixed */
+off = s_bank[w] & ((size - 1) & 0x3FFFF);
+```
+
+Every banked read was therefore served from the wrong part of the 256 KB M1.
+The fixed bank (driver code) still ran, so commands and some effects worked,
+but the music sequences and instrument tables were corrupted. The driver
+eventually stalled or played isolated samples. The mask also truncated banks
+above `0x2FFFF`, although Garou's traced session only used banks up to
+`0x27000`; the incorrect base was the primary fault.
+
+The correction is in `neogeorecomp/src/audio.c`:
+
+* use the masked file offset directly (MAME `init_audio()` / `ROM_RELOAD`
+  layout), and
+* call `audio_sync()` before generating samples so the Z80 sequencer keeps
+  running even when the 68000 is not polling a sound port.
+
+**Evidence:**
+
+| Run | Long silent runs after boot |
+|---|---|
+| Before, old audio, native 19,000 frames | 96-107 s (12 s), 205-212 s (8 s), 249-260 s (12 s) |
+| Before, old audio, interpreter 19,000 frames | 96-107 s (12 s), 188-205 s (18 s) |
+| After, native 19,000 frames | 105 s (1 s), 258-259 s (2 s) |
+| After, interpreter 19,000 frames | no long run before 186 s; the 196-204 s quiet window is the continue screen |
+| MAME 0.242 reference, same scripted inputs | 0-5 s, 16 s, 93-94 s, 105 s, 225 s, 298-302 s only |
+
+The MAME reference has overall RMS 2850 and the repaired native capture 2813,
+with the same continuity. A MAME run is not sample-identical because its
+mixer and timing differ, but the long BGM dropouts are absent.
+
+A regression test is in `tests/audio_regression.py`. It runs the scripted
+session, computes one-second RMS windows and fails on any silent run longer
+than 3 seconds after the boot period:
+
+```
+python tests/audio_regression.py --exe build-windows/Release/Garou.exe \
+    --rom-path build-windows/roms
+python tests/audio_regression.py --exe build-windows/Release/Garou.exe \
+    --rom-path build-windows/roms --interp
+```
+
+Both pass on the repaired build. The old interpreter build fails with the
+12-second 96-107 s gap, which is the regression this test guards.
+
+The Z80 driver still uses the real M1 program, NMI/reply latches and ROM
+banking. The YM2610's FM, SSG and ADPCM-A/B are synthesized by
 [ymfm](https://github.com/aaronsgiles/ymfm), clocked by the Z80, and played
-through SDL2 or written with `--wav`. A 3,000-frame coin/start session produces
-a 2-channel, 55,555 Hz WAV with peak 22238 and RMS 2152.5, so the path is
-alive. The mix has not been listened to critically; treat subjective quality
-as unverified.
+through SDL2 or written with `--wav`. The mix has not been listened to
+critically; subjective quality remains unverified.
 
 ## Known limitations
 
@@ -298,8 +350,9 @@ as unverified.
 * **Physical gamepads not tested here.** The SDL2 GameController path is the
   toolkit's existing mapping; no physical pad was available in this
   environment.
-* **Audio not auditioned.** Signal presence and level are measured; music and
-  effect quality are not subjectively verified.
+* **Audio continuity fixed, mix not auditioned.** Native and interpreter
+  captures are continuous and the regression test passes; music/effect
+  balance and subjective quality were not listened to.
 * **No memory card support** (the toolkit does not implement it).
 * **No commercial use.** The project is licensed under PolyForm Noncommercial
   1.0.0; do not assume commercial redistribution is permitted.
@@ -320,6 +373,7 @@ tools/prot_sma.cpp          MAME SMA permutations (BSD-3, reference)
 tools/tables.h              generated CMC42 tables
 tests/coin_start.txt        credit/start script
 tests/play_long.txt         coin -> start -> character -> match script
+tests/audio_regression.py   WAV continuity regression test
 packaging/appimage/         AppImage build script, desktop file, icon, README
 docs/                       compatibility, testing, hardware and runtime notes
 neogeorecomp/               toolkit copy (MIT), with generic SMA/RNG/fix fixes

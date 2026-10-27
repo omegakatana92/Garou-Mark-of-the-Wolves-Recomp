@@ -130,16 +130,21 @@ static uint8_t z_read(void *u, uint16_t a) {
     size_t size = rom_size();
     if (a < 0x8000) return r[a % size];
     if (a >= 0xF800) return s_ram[a & 0x7FF];
-    /* MAME's init_audio(): bank entry b lives at
-     * 0x10000 + ((b << (11 + window)) & ((size - 0x10000 - 1) & 0x3FFFF)).
-     * The 0x10000 base skips the fixed 64 KB at the bottom of the M1. */
+    /* MAME's init_audio(): each bank entry is
+     * 0x10000 + ((bank << (11 + window)) & address_mask) in the audio
+     * region.  ROM_RELOAD puts the first byte of the M1 file at region
+     * offset 0x10000, so the file offset is the masked value alone.
+     * address_mask comes from the region length, which is
+     * (M1 size + 0x10000); for files up to 512 KB that reduces to
+     * (M1 size - 1) & 0x3FFFF.  Masking a 256 KB M1 with 0x2FFFF would
+     * truncate banks 0x30000-0x3FFFF, which the music driver uses. */
+    uint32_t reg_mask = size ? (((uint32_t)size - 1u) & 0x3FFFFu) : 0;
     static const uint32_t win_mask[4] = {0x7FF, 0xFFF, 0x1FFF, 0x3FFF};
-    uint32_t reg_mask = size > 0x10000 ? ((uint32_t)(size - 0x10000 - 1) & 0x3FFFF) : 0;
     uint32_t off;
-    if (a >= 0xF000) off = 0x10000 + ((s_bank[0] & reg_mask) + (a & win_mask[0]));
-    else if (a >= 0xE000) off = 0x10000 + ((s_bank[1] & reg_mask) + (a & win_mask[1]));
-    else if (a >= 0xC000) off = 0x10000 + ((s_bank[2] & reg_mask) + (a & win_mask[2]));
-    else off = 0x10000 + ((s_bank[3] & reg_mask) + (a & win_mask[3]));
+    if (a >= 0xF000) off = (s_bank[0] & reg_mask) + (a & win_mask[0]);
+    else if (a >= 0xE000) off = (s_bank[1] & reg_mask) + (a & win_mask[1]);
+    else if (a >= 0xC000) off = (s_bank[2] & reg_mask) + (a & win_mask[2]);
+    else off = (s_bank[3] & reg_mask) + (a & win_mask[3]);
     return r[off % size];
 }
 
@@ -173,7 +178,12 @@ static uint8_t z_in(z80 *z, uint8_t port) {
     case 0x08: case 0x09: case 0x0A: case 0x0B: {
         static const uint32_t unit[4] = {0x800, 0x1000, 0x2000, 0x4000};
         int w = port & 3;
-        s_bank[w] = port_high(z) * unit[w];
+        uint8_t high = port_high(z);
+        s_bank[w] = high * unit[w];
+        if (s_trace)
+            fprintf(stderr, "[audio] bank w=%d high=%02X raw=%05X frame=%lld\n",
+                    w, high, s_bank[w],
+                    (long long)(ng_cycles / NG_CLOCKS_PER_FRAME));
         return 0;
     }
     default: return 0;
@@ -267,6 +277,9 @@ void audio_select_bios_rom(int bios) {
 }
 
 size_t audio_take_samples(int16_t *out, size_t max_frames) {
+    /* Keep the Z80/sequencer running even when the 68000 is not polling a
+     * sound port; pull-based audio otherwise starves the driver. */
+    audio_sync();
     generate_to_now();
     if (s_trace) {
         long long f = (long long)(ng_cycles / NG_CLOCKS_PER_FRAME);
